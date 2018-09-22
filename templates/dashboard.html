@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-
+{% block metarefresh %}
+<meta http-equiv="refresh" content="10" >
+{% endblock  %}
 {% block content %}
     <div class = "jumbotron">
         <div class = "container">
@@ -11,7 +13,26 @@
     <div class = "container">
         <div class = "row">
             <h2>Requests</h2>
+            {% if request %}
+            <table class = "table table-striped">
+                <tr>
+                    <th>N0.</th>
+                    <th>Wait</th>
+                    <th>Resolve</th>
+                </tr>
+                {% for request in requets %}
+                <tr>
+                    <form class = "form-inline" action="/dashboard/resolve">
+                        <td>{{request.table_number}}</td>
+                        <td>{{request.wait_minutes}}</td>
+                        <td><input type = "submit" value="Resolve" class="btn btn-primary"></td>
+                    </form>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
             <p>All your customers are currently satisfied - no requests</p>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

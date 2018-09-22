@@ -4,10 +4,14 @@ from flask_login import LoginManager, login_required, login_user, logout_user, c
 from mockdbhelper import MockDBHelper as DBHelper
 from user import User
 from passwordhelper import PasswordHelper
+from bitlyhelper import BitlyHelper
+from forms import RegistrationForm
 import config
+import datetime
 
 DB = DBHelper()
 PH = PasswordHelper()
+BH = BitlyHelper()
 
 app = Flask(__name__)
 app.config.update(dict(
@@ -18,7 +22,8 @@ login_manager = LoginManager(app)
 
 @app.route('/')
 def home():
-    return render_template('home.html')
+    registrationform = RegistrationForm()
+    return render_template('home.html', registrationform = registrationform)
 
 @app.route("/account")
 @login_required
@@ -52,22 +57,32 @@ def logout():
 
 @app.route("/register", methods=["POST"])
 def register():
+    form = RegistrationForm(request.form)
     email = request.form.get("email")
     pwd1 = request.form.get("password")
     pwd2 = request.form.get("password2")
     if not pwd1 == pwd2:
         return redirect(url_for('home'))
-    if DB.get_user(email):
+    if form.validate():
+        if DB.get_user(email):
+            form.email.errors.append("Email address already registered")
+            return render_template('home', registrationform=form)
+        salt = PH.get_salt()
+        hashed = PH.get_hash(str(pwd1) + str(salt))
+        DB.add_user(email, salt, hashed)
         return redirect(url_for('home'))
-    salt = PH.get_salt()
-    hashed = PH.get_hash(str(pwd1) + str(salt))
-    DB.add_user(email, salt, hashed)
-    return redirect(url_for('home'))
+    return render_template("home.html", registrationform=form)
 
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    now = datetime.datetime.now()
+    requests = DB.get_requests(current_user.get_id())
+    print(requests)
+    for req in requests:
+        deltaseconds = (now - req['time']).seconds
+        req['wait_minutes'] = "{}.{}".format((deltaseconds/60), str(deltaseconds % 60).zfill(2))
+    return render_template("dashboard.html", requests=requests)
 
 @app.route("/account/createtable", methods=["POST"])
 @login_required
@@ -84,6 +99,18 @@ def account_deletetable():
     tableid = request.args.get("tableid")
     DB.delete_table(tableid)
     return redirect(url_for('account'))
+
+@app.route("/newrequest/<tid>")
+def new_request(tid):
+    DB.add_request(tid, datetime.datetime.now())
+    return "Your request has been received and a waiter will attend you shortly"
+
+@app.route("/dashboard/resolve")
+@login_required
+def dashboard_resolve():
+    request_id = request.args.get("request_id")
+    DB.delete_request(request_id)
+    return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

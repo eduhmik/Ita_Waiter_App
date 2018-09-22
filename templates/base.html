@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% block metarefresh %}
+    
+    {% endblock  %}
     <title>Waiter Caller</title>
 
     <!--Bootstrap Core CSS -->
@@ -16,14 +19,22 @@ html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/
 respond.min.js"></script>
 <![endif]-->
+<style type="text/css">
+    ul.errors {
+        list-style-type: none;
+        padding: 0;
+        color: red;
+    }
+</style>
 </head>
 <body>
     {% block navbar %}
     <nav class = "navbar navbar-inverse navbar-fixed-top">
         <div class = "container">
             <div class = "navbar-header">
-                <a class = "navbar-brand" href = "/dashboard">Dashboard</a>
-                <a class = "navbar-brand" href = "/account">Account</a>
+                <a class="navbar-brand" href = "{{url_for('home')}} ">Home</a>
+                <a class = "navbar-brand" href = "{{url_for('dashboard')}}">Dashboard</a>
+                <a class = "navbar-brand" href = "{{url_for('account')}}">Account</a>
             </div>
         </div>
     </nav>
@@ -36,7 +47,7 @@ respond.min.js"></script>
     <div class="container">
         <hr>
         <footer>
-            <p>&copy; A. Non 2018</p>
+            <p>&copy; 2018 Edutec and Companies</p>
         </footer>
     </div>
 
